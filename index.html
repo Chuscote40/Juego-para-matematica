@@ -1,0 +1,2336 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>La Casa 67 - Juego 2D</title>
+
+<style>
+
+*{
+    box-sizing:border-box;
+}
+
+body{
+    margin:0;
+    background:#08090c;
+    color:white;
+    font-family:Arial,sans-serif;
+    overflow:hidden;
+}
+
+#juego{
+    width:100vw;
+    height:100vh;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+}
+
+canvas{
+    background:#15151a;
+    border:3px solid #6d1010;
+
+    box-shadow:0 0 25px #000;
+
+    max-width:96vw;
+    max-height:82vh;
+}
+
+
+/* =========================
+   PANTALLAS
+========================= */
+
+.pantalla{
+
+    position:fixed;
+
+    inset:0;
+
+    background:rgba(0,0,0,.94);
+
+    z-index:10;
+
+    display:flex;
+
+    flex-direction:column;
+
+    align-items:center;
+
+    justify-content:center;
+
+    text-align:center;
+
+    padding:25px;
+}
+
+.pantalla h1{
+
+    font-size:58px;
+
+    color:#c40000;
+
+    text-shadow:0 0 18px red;
+
+    margin:0 0 15px;
+}
+
+.pantalla p{
+
+    max-width:650px;
+
+    line-height:1.6;
+}
+
+button{
+
+    padding:13px 28px;
+
+    margin-top:15px;
+
+    background:#350000;
+
+    border:1px solid #d00000;
+
+    color:white;
+
+    font-size:18px;
+
+    cursor:pointer;
+}
+
+button:hover{
+
+    background:#700000;
+}
+
+
+/* =========================
+   HUD
+========================= */
+
+#hud{
+
+    position:fixed;
+
+    top:12px;
+
+    left:12px;
+
+    z-index:5;
+
+    background:rgba(0,0,0,.72);
+
+    padding:12px 16px;
+
+    border-radius:8px;
+
+    line-height:1.6;
+}
+
+
+/* =========================
+   MENSAJE
+========================= */
+
+#mensaje{
+
+    position:fixed;
+
+    bottom:15px;
+
+    left:50%;
+
+    transform:translateX(-50%);
+
+    background:rgba(0,0,0,.78);
+
+    padding:10px 20px;
+
+    border-radius:8px;
+
+    z-index:5;
+
+    text-align:center;
+
+    min-width:280px;
+}
+
+
+/* =========================
+   MATEMÁTICAS
+========================= */
+
+#matematica{
+
+    display:none;
+
+    z-index:20;
+}
+
+#matematica h1{
+
+    color:#ffd84d;
+
+    text-shadow:0 0 15px #ff9900;
+}
+
+#operacion{
+
+    font-size:55px;
+
+    font-weight:bold;
+
+    margin:20px;
+
+    color:white;
+}
+
+#respuesta{
+
+    width:250px;
+
+    padding:14px;
+
+    background:#15151a;
+
+    color:white;
+
+    border:2px solid #ffd84d;
+
+    font-size:22px;
+
+    text-align:center;
+
+    outline:none;
+}
+
+#resultadoMatematica{
+
+    min-height:30px;
+
+    margin-top:15px;
+
+    font-size:18px;
+}
+
+
+.verde{
+
+    color:#69ff69;
+}
+
+.rojo{
+
+    color:#ff5555;
+}
+
+.amarillo{
+
+    color:#ffd84d;
+}
+
+</style>
+</head>
+
+<body>
+
+
+<!-- =========================
+     INICIO
+========================= -->
+
+<div id="inicio" class="pantalla">
+
+    <h1>LA CASA 67</h1>
+
+    <p>
+
+        La misma historia, ahora en 2D.
+
+        <br>
+
+        Encuentra la llave, resuelve las operaciones,
+        evita al 67 y escapa.
+
+    </p>
+
+    <p>
+
+        Hay una operación matemática
+        en cada nivel.
+
+        <br>
+
+        ¡Son <b class="amarillo">4 ejercicios</b>
+        en total!
+
+    </p>
+
+    <p>
+
+        Completa todos los niveles:
+
+        <br>
+
+        <b class="amarillo">
+            🏆 GANAS +2 DÉCIMAS
+        </b>
+
+    </p>
+
+    <button onclick="iniciarJuego()">
+
+        JUGAR
+
+    </button>
+
+</div>
+
+
+<!-- =========================
+     MATEMÁTICAS
+========================= -->
+
+<div id="matematica" class="pantalla">
+
+    <h1>
+        🧮 ¡RESUELVE LA OPERACIÓN!
+    </h1>
+
+    <p>
+
+        Encontraste la llave.
+
+        <br>
+
+        El juego está pausado.
+
+        <br>
+
+        El 67 no puede moverse mientras respondes.
+
+    </p>
+
+    <h2 id="operacion">
+
+        5 + 5 = ?
+
+    </h2>
+
+    <input
+        type="number"
+        id="respuesta"
+        placeholder="Tu respuesta"
+        autocomplete="off"
+    >
+
+    <button onclick="comprobarRespuesta()">
+
+        COMPROBAR
+
+    </button>
+
+    <div id="resultadoMatematica"></div>
+
+</div>
+
+
+<!-- =========================
+     FINAL
+========================= -->
+
+<div id="final" class="pantalla" style="display:none">
+
+    <h1>
+        ¡ESCAPASTE!
+    </h1>
+
+    <p>
+
+        Completaste los 4 niveles
+        de La Casa 67.
+
+    </p>
+
+    <h2 class="amarillo">
+
+        🏆 PREMIO: +2 DÉCIMAS
+
+    </h2>
+
+    <p>
+
+        Respondiste las 4 operaciones
+        matemáticas y lograste escapar.
+
+    </p>
+
+    <button onclick="location.reload()">
+
+        JUGAR DE NUEVO
+
+    </button>
+
+</div>
+
+
+<!-- =========================
+     DERROTA
+========================= -->
+
+<div id="perdiste" class="pantalla" style="display:none">
+
+    <h1>
+
+        EL 67 TE ENCONTRÓ
+
+    </h1>
+
+    <p>
+
+        El nivel se reiniciará
+        para que puedas intentarlo nuevamente.
+
+    </p>
+
+    <button onclick="reiniciarNivel()">
+
+        REINTENTAR
+
+    </button>
+
+</div>
+
+
+<!-- =========================
+     HUD
+========================= -->
+
+<div id="hud">
+
+    <b>LA CASA 67</b>
+
+    <br>
+
+    Nivel:
+
+    <span id="nivel">
+        1
+    </span>
+
+    / 4
+
+    <br>
+
+    🔑 Llave:
+
+    <span id="llave">
+        NO
+    </span>
+
+    <br>
+
+    🧮 Ejercicio:
+
+    <span id="ejercicio">
+        0
+    </span>
+
+    / 4
+
+    <br>
+
+    ❤️ Vidas:
+
+    <span id="vidas">
+        3
+    </span>
+
+    <br>
+
+    <small>
+        WASD / Flechas: moverse
+    </small>
+
+</div>
+
+
+<div id="mensaje">
+
+    Encuentra la llave.
+
+</div>
+
+
+<!-- =========================
+     JUEGO
+========================= -->
+
+<div id="juego">
+
+    <canvas
+        id="canvas"
+        width="960"
+        height="600">
+    </canvas>
+
+</div>
+
+
+<script>
+
+
+/* =====================================================
+   CONFIGURACIÓN
+===================================================== */
+
+const canvas =
+    document.getElementById("canvas");
+
+const ctx =
+    canvas.getContext("2d");
+
+const TILE = 40;
+
+const COLS = 24;
+
+const ROWS = 15;
+
+
+/* =====================================================
+   VARIABLES
+===================================================== */
+
+let nivelActual = 1;
+
+let vidas = 3;
+
+let llaveObtenida = false;
+
+let juegoActivo = false;
+
+let juegoPausado = false;
+
+let puertaAbierta = false;
+
+let teclas = {};
+
+let ultimoTiempo = 0;
+
+let animacion67 = 0;
+
+
+/* =====================================================
+   VARIABLES DE MATEMÁTICAS
+===================================================== */
+
+let numero1 = 0;
+
+let numero2 = 0;
+
+let operador = "";
+
+let respuestaCorrecta = 0;
+
+let ejercicioActual = 0;
+
+
+/* =====================================================
+   JUGADOR
+===================================================== */
+
+const jugador = {
+
+    x:2*TILE+20,
+
+    y:12*TILE+20,
+
+    radio:13,
+
+    velocidad:190
+
+};
+
+
+/* =====================================================
+   67
+===================================================== */
+
+const monstruo = {
+
+    x:20*TILE+20,
+
+    y:2*TILE+20,
+
+    radio:15,
+
+    /*
+       El jugador tiene 190.
+       El 67 tiene 145.
+    */
+
+    velocidad:145
+
+};
+
+
+/* =====================================================
+   MAPAS
+===================================================== */
+
+const niveles = [
+
+[
+"########################",
+"#......................#",
+"#.######........####...#",
+"#......................#",
+"#.####....###########..#",
+"#......................#",
+"#.....########.........#",
+"#......................#",
+"#.###########..........#",
+"#......................#",
+"#..........###########.#",
+"#......................#",
+"#......................#",
+"#......................#",
+"########################"
+],
+
+[
+"########################",
+"#......................#",
+"#..########............#",
+"#......................#",
+"#............########..#",
+"#......................#",
+"#.########.............#",
+"#......................#",
+"#.............########.#",
+"#......................#",
+"#..########............#",
+"#......................#",
+"#......................#",
+"#......................#",
+"########################"
+],
+
+[
+"########################",
+"#......................#",
+"#.######........#####..#",
+"#......................#",
+"#.........######.......#",
+"#......................#",
+"#..###############.....#",
+"#......................#",
+"#.....########.........#",
+"#......................#",
+"#..............#####...#",
+"#......................#",
+"#......................#",
+"#......................#",
+"########################"
+],
+
+[
+"########################",
+"#......................#",
+"#..##########..........#",
+"#......................#",
+"#..........##########..#",
+"#......................#",
+"#.################.....#",
+"#......................#",
+"#.....###########......#",
+"#......................#",
+"#...............#####..#",
+"#......................#",
+"#......................#",
+"#......................#",
+"########################"
+]
+
+];
+
+
+/* =====================================================
+   LLAVE Y PUERTA
+===================================================== */
+
+let llave = {
+
+    x:0,
+
+    y:0
+
+};
+
+
+let puerta = {
+
+    x:0,
+
+    y:0
+
+};
+
+
+/* =====================================================
+   INICIAR
+===================================================== */
+
+function iniciarJuego(){
+
+    document.getElementById("inicio")
+        .style.display="none";
+
+    juegoActivo=true;
+
+    juegoPausado=false;
+
+    nivelActual=1;
+
+    vidas=3;
+
+    ejercicioActual=0;
+
+    cargarNivel(nivelActual);
+
+    requestAnimationFrame(bucle);
+
+}
+
+
+/* =====================================================
+   CARGAR NIVEL
+===================================================== */
+
+function cargarNivel(n){
+
+    nivelActual=n;
+
+    llaveObtenida=false;
+
+    puertaAbierta=false;
+
+    juegoPausado=false;
+
+
+    jugador.x=
+        2*TILE+20;
+
+    jugador.y=
+        12*TILE+20;
+
+
+    monstruo.x=
+        20*TILE+20;
+
+    monstruo.y=
+        2*TILE+20;
+
+
+    crearObjetosNivel();
+
+    actualizarHUD();
+
+    mensaje(
+        "Nivel "+nivelActual+
+        ": encuentra la llave."
+    );
+
+}
+
+
+/* =====================================================
+   CREAR OBJETOS
+===================================================== */
+
+function crearObjetosNivel(){
+
+    const posicionesLlave=[
+
+        [18,3],
+
+        [17,10],
+
+        [15,5],
+
+        [19,11]
+
+    ];
+
+
+    const p =
+        posicionesLlave[
+            nivelActual-1
+        ];
+
+
+    llave.x =
+        p[0]*TILE+20;
+
+    llave.y =
+        p[1]*TILE+20;
+
+
+    const posicionesPuerta=[
+
+        [11,1],
+
+        [21,1],
+
+        [21,1],
+
+        [21,1]
+
+    ];
+
+
+    const salida =
+        posicionesPuerta[
+            nivelActual-1
+        ];
+
+
+    puerta.x =
+        salida[0]*TILE+20;
+
+    puerta.y =
+        salida[1]*TILE+20;
+
+
+    /* Buscar espacio libre para la llave */
+
+    if(
+        esMuro(
+            Math.floor(llave.x/TILE),
+            Math.floor(llave.y/TILE)
+        )
+    ){
+
+        buscarEspacioLlave();
+
+    }
+
+
+    /* Buscar espacio libre para la puerta */
+
+    if(
+        esMuro(
+            Math.floor(puerta.x/TILE),
+            Math.floor(puerta.y/TILE)
+        )
+    ){
+
+        buscarEspacioPuerta();
+
+    }
+
+}
+
+
+/* =====================================================
+   BUSCAR ESPACIO PARA LLAVE
+===================================================== */
+
+function buscarEspacioLlave(){
+
+    for(let y=1;y<ROWS-1;y++){
+
+        for(let x=1;x<COLS-1;x++){
+
+            if(!esMuro(x,y)){
+
+                llave.x =
+                    x*TILE+20;
+
+                llave.y =
+                    y*TILE+20;
+
+                return;
+
+            }
+
+        }
+
+    }
+
+}
+
+
+/* =====================================================
+   BUSCAR ESPACIO PARA PUERTA
+===================================================== */
+
+function buscarEspacioPuerta(){
+
+    for(let x=1;x<COLS-1;x++){
+
+        if(!esMuro(x,1)){
+
+            puerta.x =
+                x*TILE+20;
+
+            puerta.y =
+                TILE+20;
+
+            return;
+
+        }
+
+    }
+
+}
+
+
+/* =====================================================
+   TECLADO
+===================================================== */
+
+window.addEventListener(
+    "keydown",
+    function(e){
+
+        teclas[
+            e.key.toLowerCase()
+        ] = true;
+
+
+        if(
+            e.key==="Enter" &&
+            juegoPausado
+        ){
+
+            comprobarRespuesta();
+
+        }
+
+    }
+);
+
+
+window.addEventListener(
+    "keyup",
+    function(e){
+
+        teclas[
+            e.key.toLowerCase()
+        ] = false;
+
+    }
+);
+
+
+/* =====================================================
+   MURO
+===================================================== */
+
+function esMuro(x,y){
+
+    if(
+        x<0 ||
+        x>=COLS ||
+        y<0 ||
+        y>=ROWS
+    ){
+
+        return true;
+
+    }
+
+
+    return
+        niveles[
+            nivelActual-1
+        ][y][x]==="#";
+
+}
+
+
+/* =====================================================
+   COLISIÓN
+===================================================== */
+
+function puedeMover(
+    x,
+    y,
+    radio
+){
+
+    const izquierda =
+        Math.floor(
+            (x-radio)/TILE
+        );
+
+    const derecha =
+        Math.floor(
+            (x+radio)/TILE
+        );
+
+    const arriba =
+        Math.floor(
+            (y-radio)/TILE
+        );
+
+    const abajo =
+        Math.floor(
+            (y+radio)/TILE
+        );
+
+
+    for(
+        let yy=arriba;
+        yy<=abajo;
+        yy++
+    ){
+
+        for(
+            let xx=izquierda;
+            xx<=derecha;
+            xx++
+        ){
+
+            if(esMuro(xx,yy)){
+
+                return false;
+
+            }
+
+        }
+
+    }
+
+
+    return true;
+
+}
+
+
+/* =====================================================
+   JUGADOR
+===================================================== */
+
+function actualizarJugador(dt){
+
+    let dx=0;
+
+    let dy=0;
+
+
+    if(
+        teclas["w"] ||
+        teclas["arrowup"]
+    ){
+
+        dy--;
+
+    }
+
+
+    if(
+        teclas["s"] ||
+        teclas["arrowdown"]
+    ){
+
+        dy++;
+
+    }
+
+
+    if(
+        teclas["a"] ||
+        teclas["arrowleft"]
+    ){
+
+        dx--;
+
+    }
+
+
+    if(
+        teclas["d"] ||
+        teclas["arrowright"]
+    ){
+
+        dx++;
+
+    }
+
+
+    if(
+        dx!==0 ||
+        dy!==0
+    ){
+
+        const largo =
+            Math.hypot(dx,dy);
+
+        dx/=largo;
+
+        dy/=largo;
+
+    }
+
+
+    const nuevoX =
+        jugador.x+
+        dx*
+        jugador.velocidad*
+        dt;
+
+
+    const nuevoY =
+        jugador.y+
+        dy*
+        jugador.velocidad*
+        dt;
+
+
+    if(
+        puedeMover(
+            nuevoX,
+            jugador.y,
+            jugador.radio
+        )
+    ){
+
+        jugador.x=nuevoX;
+
+    }
+
+
+    if(
+        puedeMover(
+            jugador.x,
+            nuevoY,
+            jugador.radio
+        )
+    ){
+
+        jugador.y=nuevoY;
+
+    }
+
+}
+
+
+/* =====================================================
+   67 - PERSECUCIÓN
+===================================================== */
+
+function actualizarMonstruo(dt){
+
+    let dx =
+        jugador.x-
+        monstruo.x;
+
+    let dy =
+        jugador.y-
+        monstruo.y;
+
+
+    const distancia =
+        Math.hypot(dx,dy);
+
+
+    if(distancia>0){
+
+        dx/=distancia;
+
+        dy/=distancia;
+
+    }
+
+
+    const velocidad =
+        monstruo.velocidad;
+
+
+    const movimientoX =
+        dx*
+        velocidad*
+        dt;
+
+
+    const movimientoY =
+        dy*
+        velocidad*
+        dt;
+
+
+    const nuevoX =
+        monstruo.x+
+        movimientoX;
+
+
+    const nuevoY =
+        monstruo.y+
+        movimientoY;
+
+
+    /*
+       PRIMER INTENTO:
+       moverse directamente.
+    */
+
+    let pudoMoverse=false;
+
+
+    if(
+        puedeMover(
+            nuevoX,
+            monstruo.y,
+            monstruo.radio
+        )
+    ){
+
+        monstruo.x=nuevoX;
+
+        pudoMoverse=true;
+
+    }
+
+
+    if(
+        puedeMover(
+            monstruo.x,
+            nuevoY,
+            monstruo.radio
+        )
+    ){
+
+        monstruo.y=nuevoY;
+
+        pudoMoverse=true;
+
+    }
+
+
+    /*
+       SEGUNDO INTENTO:
+       si encuentra una pared,
+       intenta moverse lateralmente.
+    */
+
+    if(!pudoMoverse){
+
+        const opciones=[
+
+            {
+                x:monstruo.x+
+                    velocidad*dt,
+                y:monstruo.y
+            },
+
+            {
+                x:monstruo.x-
+                    velocidad*dt,
+                y:monstruo.y
+            },
+
+            {
+                x:monstruo.x,
+                y:monstruo.y+
+                    velocidad*dt
+            },
+
+            {
+                x:monstruo.x,
+                y:monstruo.y-
+                    velocidad*dt
+            }
+
+        ];
+
+
+        /*
+           Ordenamos las opciones
+           según cuál queda más cerca
+           del jugador.
+        */
+
+        opciones.sort(
+            function(a,b){
+
+                const distanciaA =
+                    Math.hypot(
+                        jugador.x-a.x,
+                        jugador.y-a.y
+                    );
+
+                const distanciaB =
+                    Math.hypot(
+                        jugador.x-b.x,
+                        jugador.y-b.y
+                    );
+
+                return distanciaA-
+                       distanciaB;
+
+            }
+        );
+
+
+        for(
+            let i=0;
+            i<opciones.length;
+            i++
+        ){
+
+            if(
+                puedeMover(
+                    opciones[i].x,
+                    opciones[i].y,
+                    monstruo.radio
+                )
+            ){
+
+                monstruo.x =
+                    opciones[i].x;
+
+                monstruo.y =
+                    opciones[i].y;
+
+                break;
+
+            }
+
+        }
+
+    }
+
+
+    /*
+       COMPROBAR SI ATRAPÓ AL JUGADOR
+    */
+
+    const distanciaJugador =
+        Math.hypot(
+            jugador.x-
+            monstruo.x,
+
+            jugador.y-
+            monstruo.y
+        );
+
+
+    if(
+        distanciaJugador<27
+    ){
+
+        perderVida();
+
+    }
+
+}
+
+
+/* =====================================================
+   PERDER VIDA
+===================================================== */
+
+function perderVida(){
+
+    if(
+        !juegoActivo ||
+        juegoPausado
+    ){
+
+        return;
+
+    }
+
+
+    vidas--;
+
+    actualizarHUD();
+
+
+    juegoActivo=false;
+
+
+    document.getElementById(
+        "perdiste"
+    ).style.display="flex";
+
+}
+
+
+/* =====================================================
+   REINICIAR NIVEL
+===================================================== */
+
+function reiniciarNivel(){
+
+    document.getElementById(
+        "perdiste"
+    ).style.display="none";
+
+
+    vidas=3;
+
+
+    cargarNivel(
+        nivelActual
+    );
+
+
+    juegoActivo=true;
+
+}
+
+
+/* =====================================================
+   REVISAR LLAVE
+===================================================== */
+
+function revisarLlave(){
+
+    const distancia =
+        Math.hypot(
+            jugador.x-llave.x,
+            jugador.y-llave.y
+        );
+
+
+    if(
+        !llaveObtenida &&
+        distancia<30
+    ){
+
+        llaveObtenida=true;
+
+
+        actualizarHUD();
+
+
+        /*
+           PAUSAR EL JUEGO
+        */
+
+        juegoPausado=true;
+
+
+        mensaje(
+            "⏸️ Juego pausado. Resuelve la operación."
+        );
+
+
+        generarOperacion();
+
+
+        document.getElementById(
+            "matematica"
+        ).style.display="flex";
+
+
+        document.getElementById(
+            "respuesta"
+        ).value="";
+
+
+        document.getElementById(
+            "resultadoMatematica"
+        ).textContent="";
+
+
+        setTimeout(
+            function(){
+
+                document.getElementById(
+                    "respuesta"
+                ).focus();
+
+            },
+            100
+        );
+
+    }
+
+}
+
+
+/* =====================================================
+   GENERAR OPERACIÓN
+===================================================== */
+
+function generarOperacion(){
+
+    const tipo =
+        Math.floor(
+            Math.random()*4
+        );
+
+
+    /*
+       SUMA
+    */
+
+    if(tipo===0){
+
+        operador="+";
+
+
+        numero1 =
+            Math.floor(
+                Math.random()*50
+            )+1;
+
+
+        numero2 =
+            Math.floor(
+                Math.random()*50
+            )+1;
+
+
+        respuestaCorrecta =
+            numero1+
+            numero2;
+
+    }
+
+
+    /*
+       RESTA
+    */
+
+    else if(tipo===1){
+
+        operador="-";
+
+
+        numero1 =
+            Math.floor(
+                Math.random()*50
+            )+20;
+
+
+        numero2 =
+            Math.floor(
+                Math.random()*20
+            )+1;
+
+
+        respuestaCorrecta =
+            numero1-
+            numero2;
+
+    }
+
+
+    /*
+       MULTIPLICACIÓN
+    */
+
+    else if(tipo===2){
+
+        operador="×";
+
+
+        numero1 =
+            Math.floor(
+                Math.random()*12
+            )+1;
+
+
+        numero2 =
+            Math.floor(
+                Math.random()*12
+            )+1;
+
+
+        respuestaCorrecta =
+            numero1*
+            numero2;
+
+    }
+
+
+    /*
+       DIVISIÓN
+    */
+
+    else{
+
+        operador="÷";
+
+
+        numero2 =
+            Math.floor(
+                Math.random()*10
+            )+2;
+
+
+        respuestaCorrecta =
+            Math.floor(
+                Math.random()*10
+            )+2;
+
+
+        numero1 =
+            numero2*
+            respuestaCorrecta;
+
+    }
+
+
+    document.getElementById(
+        "operacion"
+    ).textContent =
+
+        numero1+
+        " "+
+        operador+
+        " "+
+        numero2+
+        " = ?";
+
+}
+
+
+/* =====================================================
+   COMPROBAR RESPUESTA
+===================================================== */
+
+function comprobarRespuesta(){
+
+    const input =
+        document.getElementById(
+            "respuesta"
+        );
+
+
+    const respuesta =
+        Number(input.value);
+
+
+    const resultado =
+        document.getElementById(
+            "resultadoMatematica"
+        );
+
+
+    if(
+        input.value.trim()===""
+    ){
+
+        resultado.textContent =
+            "⚠️ Escribe una respuesta.";
+
+        resultado.className =
+            "rojo";
+
+        return;
+
+    }
+
+
+    if(
+        respuesta ===
+        respuestaCorrecta
+    ){
+
+        resultado.textContent =
+            "✅ ¡Correcto! Puedes continuar.";
+
+        resultado.className =
+            "verde";
+
+
+        ejercicioActual++;
+
+
+        actualizarHUD();
+
+
+        setTimeout(
+            function(){
+
+                document.getElementById(
+                    "matematica"
+                ).style.display="none";
+
+
+                juegoPausado=false;
+
+
+                mensaje(
+                    "🧮 ¡Correcto! Ahora busca la puerta."
+                );
+
+            },
+            800
+        );
+
+    }
+
+    else{
+
+        resultado.textContent =
+            "❌ Incorrecto. Inténtalo nuevamente.";
+
+        resultado.className =
+            "rojo";
+
+
+        input.value="";
+
+        input.focus();
+
+    }
+
+}
+
+
+/* =====================================================
+   PUERTA
+===================================================== */
+
+function revisarPuerta(){
+
+    const distancia =
+        Math.hypot(
+            jugador.x-puerta.x,
+            jugador.y-puerta.y
+        );
+
+
+    if(
+        distancia<50
+    ){
+
+        if(llaveObtenida){
+
+            puertaAbierta=true;
+
+
+            mensaje(
+                "🚪 ¡Puerta abierta! ¡Escapa!"
+            );
+
+        }
+
+        else{
+
+            mensaje(
+                "🚪 Necesitas encontrar la llave."
+            );
+
+        }
+
+    }
+
+
+    if(
+        puertaAbierta &&
+        distancia<42
+    ){
+
+        completarNivel();
+
+    }
+
+}
+
+
+/* =====================================================
+   COMPLETAR NIVEL
+===================================================== */
+
+function completarNivel(){
+
+    juegoActivo=false;
+
+
+    if(
+        nivelActual>=niveles.length
+    ){
+
+        document.getElementById(
+            "final"
+        ).style.display="flex";
+
+        return;
+
+    }
+
+
+    mensaje(
+        "¡Nivel completado!"
+    );
+
+
+    const siguiente =
+        nivelActual+1;
+
+
+    setTimeout(
+        function(){
+
+            cargarNivel(
+                siguiente
+            );
+
+            juegoActivo=true;
+
+        },
+        900
+    );
+
+}
+
+
+/* =====================================================
+   HUD
+===================================================== */
+
+function actualizarHUD(){
+
+    document.getElementById(
+        "nivel"
+    ).textContent =
+        nivelActual;
+
+
+    document.getElementById(
+        "vidas"
+    ).textContent =
+        vidas;
+
+
+    document.getElementById(
+        "llave"
+    ).textContent =
+
+        llaveObtenida
+        ? "SÍ"
+        : "NO";
+
+
+    document.getElementById(
+        "ejercicio"
+    ).textContent =
+
+        ejercicioActual+
+        "/4";
+
+}
+
+
+/* =====================================================
+   MENSAJE
+===================================================== */
+
+function mensaje(texto){
+
+    document.getElementById(
+        "mensaje"
+    ).textContent =
+        texto;
+
+}
+
+
+/* =====================================================
+   DIBUJAR MAPA
+===================================================== */
+
+function dibujarMapa(){
+
+    const mapa =
+        niveles[
+            nivelActual-1
+        ];
+
+
+    for(
+        let y=0;
+        y<ROWS;
+        y++
+    ){
+
+        for(
+            let x=0;
+            x<COLS;
+            x++
+        ){
+
+            const tile =
+                mapa[y][x];
+
+
+            if(
+                tile==="#"
+            ){
+
+                ctx.fillStyle =
+                    "#24242b";
+
+
+                ctx.fillRect(
+                    x*TILE,
+                    y*TILE,
+                    TILE,
+                    TILE
+                );
+
+
+                ctx.strokeStyle =
+                    "#3c3c45";
+
+
+                ctx.strokeRect(
+                    x*TILE,
+                    y*TILE,
+                    TILE,
+                    TILE
+                );
+
+            }
+
+            else{
+
+                ctx.fillStyle =
+                    "#111217";
+
+
+                ctx.fillRect(
+                    x*TILE,
+                    y*TILE,
+                    TILE,
+                    TILE
+                );
+
+
+                ctx.strokeStyle =
+                    "#1b1c22";
+
+
+                ctx.strokeRect(
+                    x*TILE,
+                    y*TILE,
+                    TILE,
+                    TILE
+                );
+
+            }
+
+        }
+
+    }
+
+}
+
+
+/* =====================================================
+   DIBUJAR LLAVE
+===================================================== */
+
+function dibujarLlave(){
+
+    if(
+        llaveObtenida
+    ){
+
+        return;
+
+    }
+
+
+    ctx.save();
+
+
+    ctx.translate(
+        llave.x,
+        llave.y
+    );
+
+
+    ctx.strokeStyle =
+        "#ffd84d";
+
+
+    ctx.fillStyle =
+        "#ffd84d";
+
+
+    ctx.lineWidth=5;
+
+
+    ctx.beginPath();
+
+    ctx.arc(
+        -7,
+        0,
+        7,
+        0,
+        Math.PI*2
+    );
+
+    ctx.stroke();
+
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+        0,
+        0
+    );
+
+    ctx.lineTo(
+        15,
+        0
+    );
+
+    ctx.stroke();
+
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+        10,
+        0
+    );
+
+    ctx.lineTo(
+        10,
+        6
+    );
+
+    ctx.stroke();
+
+
+    ctx.restore();
+
+}
+
+
+/* =====================================================
+   DIBUJAR PUERTA
+===================================================== */
+
+function dibujarPuerta(){
+
+    ctx.fillStyle =
+        puertaAbierta
+        ? "#43a047"
+        : "#8a3b20";
+
+
+    ctx.fillRect(
+        puerta.x-16,
+        puerta.y-22,
+        32,
+        44
+    );
+
+
+    ctx.strokeStyle =
+        "#e0a24b";
+
+
+    ctx.lineWidth=3;
+
+
+    ctx.strokeRect(
+        puerta.x-16,
+        puerta.y-22,
+        32,
+        44
+    );
+
+
+    ctx.fillStyle =
+        "#d5a64a";
+
+
+    ctx.beginPath();
+
+    ctx.arc(
+        puerta.x+8,
+        puerta.y,
+        4,
+        0,
+        Math.PI*2
+    );
+
+    ctx.fill();
+
+
+    ctx.fillStyle =
+        "#fff";
+
+
+    ctx.font =
+        "bold 12px Arial";
+
+
+    ctx.textAlign =
+        "center";
+
+
+    ctx.fillText(
+        "SALIDA",
+        puerta.x,
+        puerta.y-29
+    );
+
+}
+
+
+/* =====================================================
+   DIBUJAR JUGADOR
+===================================================== */
+
+function dibujarJugador(){
+
+    ctx.save();
+
+
+    ctx.shadowColor =
+        "#2196f3";
+
+
+    ctx.shadowBlur=15;
+
+
+    ctx.fillStyle =
+        "#2196f3";
+
+
+    ctx.beginPath();
+
+
+    ctx.arc(
+        jugador.x,
+        jugador.y,
+        jugador.radio,
+        0,
+        Math.PI*2
+    );
+
+
+    ctx.fill();
+
+
+    ctx.shadowBlur=0;
+
+
+    ctx.fillStyle =
+        "white";
+
+
+    ctx.beginPath();
+
+
+    ctx.arc(
+        jugador.x-5,
+        jugador.y-3,
+        3,
+        0,
+        Math.PI*2
+    );
+
+
+    ctx.arc(
+        jugador.x+5,
+        jugador.y-3,
+        3,
+        0,
+        Math.PI*2
+    );
+
+
+    ctx.fill();
+
+
+    ctx.restore();
+
+}
+
+
+/* =====================================================
+   DIBUJAR 67
+===================================================== */
+
+function dibujarMonstruo(){
+
+    animacion67+=0.08;
+
+
+    const escala =
+        1+
+        Math.sin(animacion67)*0.08;
+
+
+    ctx.save();
+
+
+    ctx.translate(
+        monstruo.x,
+        monstruo.y
+    );
+
+
+    ctx.scale(
+        escala,
+        escala
+    );
+
+
+    ctx.shadowColor =
+        "red";
+
+
+    ctx.shadowBlur=20;
+
+
+    ctx.fillStyle =
+        "#d00000";
+
+
+    ctx.beginPath();
+
+
+    ctx.arc(
+        0,
+        0,
+        monstruo.radio,
+        0,
+        Math.PI*2
+    );
+
+
+    ctx.fill();
+
+
+    ctx.shadowBlur=0;
+
+
+    ctx.fillStyle =
+        "white";
+
+
+    ctx.font =
+        "bold 15px Arial";
+
+
+    ctx.textAlign =
+        "center";
+
+
+    ctx.textBaseline =
+        "middle";
+
+
+    ctx.fillText(
+        "67",
+        0,
+        0
+    );
+
+
+    ctx.restore();
+
+}
+
+
+/* =====================================================
+   DIBUJAR TODO
+===================================================== */
+
+function dibujar(){
+
+    ctx.clearRect(
+        0,
+        0,
+        canvas.width,
+        canvas.height
+    );
+
+
+    dibujarMapa();
+
+    dibujarLlave();
+
+    dibujarPuerta();
+
+    dibujarJugador();
+
+    dibujarMonstruo();
+
+}
+
+
+/* =====================================================
+   BUCLE PRINCIPAL
+===================================================== */
+
+function bucle(tiempo){
+
+    const dt =
+        Math.min(
+            (tiempo-ultimoTiempo)/1000,
+            0.05
+        );
+
+
+    ultimoTiempo =
+        tiempo;
+
+
+    /*
+       CUANDO ESTÁ PAUSADO:
+
+       jugador = quieto
+       67 = quieto
+       juego = quieto
+
+       Solo funciona la pantalla matemática.
+    */
+
+    if(
+        juegoActivo &&
+        !juegoPausado
+    ){
+
+        actualizarJugador(dt);
+
+        actualizarMonstruo(dt);
+
+        revisarLlave();
+
+        revisarPuerta();
+
+    }
+
+
+    dibujar();
+
+
+    requestAnimationFrame(
+        bucle
+    );
+
+}
+
+
+/* =====================================================
+   ARRANCAR
+===================================================== */
+
+cargarNivel(1);
+
+dibujar();
+
+</script>
+
+</body>
+</html>
